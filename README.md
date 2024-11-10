@@ -8,13 +8,14 @@ Using Apple’s password generator can be tricky, and saving your passwords in t
 
 ### Project Structure
 ```
-Pass-Buddy/
+PassBuddyNEW/
 ├── app.py
-├── data/
-│   └── common_passwords.txt
+├── venv/
 ├── templates/
-│   └── index.html
-├── static/
-│   └── style.css
-└── requirements.txt
+│   ├── register.html
+│   ├── verify.html
+│   ├── login.html
+│   └── home.html
+├── users.db
+
 ```
