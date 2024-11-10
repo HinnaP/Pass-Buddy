@@ -10,12 +10,19 @@ Using Apple’s password generator can be tricky, and saving your passwords in t
 ```
 PassBuddyNEW/
 ├── app.py
-├── venv/
+├── auth/
+│   └── auth.py
+├── models/
+│   └── models.py
+├── static/
+│   ├── styles.css
+│   └── Pass Buddy.png
 ├── templates/
-│   ├── register.html
-│   ├── verify.html
 │   ├── login.html
-│   └── home.html
-├── users.db
+│   ├── home.html
+│   ├── register.html
+│   ├── dashboard.html
+│   └── verify.html
+├── README.md
 
 ```
