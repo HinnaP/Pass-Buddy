@@ -3,12 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin
 from flask_mail import Mail, Message
-from flask_migrate import Migrate  # Import Migrate
+from flask_migrate import Migrate
 from datetime import datetime, timedelta
 import random
 import string
 
-# Initialize the Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
@@ -18,20 +17,17 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
 app.config['MAIL_PASSWORD'] = 'your_email_password'
 
-# Initialize extensions
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-migrate = Migrate(app, db)  # Correct Migrate initialization
+migrate = Migrate(app, db)
 
-# User loader for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Define User model
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -69,7 +65,6 @@ def generate_password(selected_interests):
 
     return password
 
-# Register route
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -77,24 +72,32 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
+        # Check if username or email already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already taken. Please choose a different username.', 'danger')
+            return redirect(url_for('register'))
+        
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered. Please log in.', 'danger')
+            return redirect(url_for('login'))
+
+        # Validate password
         if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isupper() for char in password):
             flash('Password must be at least 8 characters long, include a number, and an uppercase letter.', 'danger')
             return redirect(url_for('register'))
 
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            flash('Email already registered. Please log in.', 'danger')
-            return redirect(url_for('login'))
-
+        # Create new user
         user = User(username=username, email=email)
         user.set_password(password)
         verification_code = str(random.randint(100000, 999999))
         user.verification_code = verification_code
         user.code_expiration = datetime.now() + timedelta(minutes=10)
 
+        # Add user to database
         db.session.add(user)
         db.session.commit()
 
+        # Send verification email
         msg = Message('Verify Your Account', sender='your_email@gmail.com', recipients=[email])
         msg.body = f'Your verification code is {verification_code}. This code expires in 10 minutes.'
         mail.send(msg)
@@ -104,7 +107,6 @@ def register():
 
     return render_template('register.html')
 
-# Verify email route
 @app.route('/verify_email', methods=['GET', 'POST'])
 def verify_email():
     if request.method == 'POST':
@@ -124,7 +126,6 @@ def verify_email():
 
     return render_template('verify.html')
 
-# Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -144,7 +145,6 @@ def login():
 
     return render_template('login.html')
 
-# Logout route
 @app.route('/logout')
 @login_required
 def logout():
@@ -152,7 +152,6 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-# Home route
 @app.route('/')
 @login_required
 def home():
